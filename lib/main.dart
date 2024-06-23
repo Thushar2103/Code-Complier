@@ -1,8 +1,6 @@
 // ignore_for_file: depend_on_referenced_packages, camel_case_types, deprecated_member_use
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:highlight/languages/python.dart';
@@ -25,6 +23,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Code IDE',
+      // darkTheme: ThemeData.dark(),
       home: CodeIDE_Screen(),
     );
   }
@@ -127,68 +126,116 @@ class _CodeIDE_ScreenState extends State<CodeIDE_Screen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        scrolledUnderElevation: 0,
-        backgroundColor: Colors.transparent,
-        title: const Text(
-          'Logic Complier',
-          style: TextStyle(fontWeight: FontWeight.bold),
+    Widget _codeide() {
+      return Container(
+        height: MediaQuery.of(context).size.height,
+        decoration: BoxDecoration(
+          boxShadow: [],
+          borderRadius: const BorderRadius.all(Radius.circular(5)),
+          color: monokaiSublimeTheme['root']?.backgroundColor,
         ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Container(
-          height: MediaQuery.of(context).size.height,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: monokaiSublimeTheme['root']?.backgroundColor,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ListView(controller: _scrollController, children: [
-              CodeTheme(
-                data: CodeThemeData(styles: monokaiSublimeTheme),
-                child: CodeField(
-                  lineNumbers: true,
-                  lineNumberStyle: const GutterStyle(
-                      textAlign: TextAlign.center,
-                      showErrors: true,
-                      margin: 1,
-                      textStyle:
-                          TextStyle(fontFamily: 'SourceCode', height: 1.53)),
-                  controller: _controller,
-                  textStyle: const TextStyle(fontFamily: 'SourceCode'),
-                ),
-              ),
-            ]),
-          ),
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: Container(
-                height: 150,
-                child: Center(
-                  child: TextField(
-                    controller: _outputController,
-                    readOnly: true,
-                    maxLines: null,
-                    decoration: const InputDecoration(
-                        border: OutlineInputBorder(), labelText: 'Output'),
-                  ),
-                ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ListView(controller: _scrollController, children: [
+            CodeTheme(
+              data: CodeThemeData(styles: monokaiSublimeTheme),
+              child: CodeField(
+                lineNumbers: true,
+                lineNumberStyle: const GutterStyle(
+                    textAlign: TextAlign.center,
+                    showErrors: true,
+                    textStyle: TextStyle(height: 1.5)),
+                controller: _controller,
+                textStyle: const TextStyle(fontFamily: 'SourceCode'),
               ),
             ),
-            const SizedBox(width: 10),
-            if (MediaQuery.of(context).size.width > 500)
+          ]),
+        ),
+      );
+    }
+
+    Widget? screenresponsive() {
+      if (MediaQuery.of(context).size.width >= 700) {
+        return Padding(
+            padding: const EdgeInsets.all(0.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                    flex: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8, bottom: 8),
+                      child: _codeide(),
+                    )),
+                Expanded(
+                    flex: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            flex: 5,
+                            child: SizedBox(
+                              height: 150,
+                              child: Center(
+                                child: TextField(
+                                  controller: _outputController,
+                                  readOnly: true,
+                                  maxLines: 20,
+                                  decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: 'Output'),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: DropdownButtonFormField(
+                              menuMaxHeight: 300,
+                              value: _selectedlanguage,
+                              items: _languages.map((language) {
+                                return DropdownMenuItem(
+                                  value: language,
+                                  child: Text(language),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedlanguage = value.toString();
+                                });
+                              },
+                              decoration: const InputDecoration(
+                                labelText: 'Language',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          if (_selectedlanguage == "Java")
+                            const Text(
+                                'Use Class Name as <temp> when programming on java')
+                        ],
+                      ),
+                    )),
+              ],
+            ));
+      } else if (MediaQuery.of(context).size.width <= 700) {
+        return Padding(
+          padding: const EdgeInsets.all(5.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 6, child: _codeide()),
+              const SizedBox(
+                height: 10,
+              ),
               Expanded(
+                flex: 1,
                 child: DropdownButtonFormField(
-                  menuMaxHeight: 150,
+                  menuMaxHeight: 300,
                   value: _selectedlanguage,
                   items: _languages.map((language) {
                     return DropdownMenuItem(
@@ -207,28 +254,76 @@ class _CodeIDE_ScreenState extends State<CodeIDE_Screen> {
                   ),
                 ),
               ),
-            if (MediaQuery.of(context).size.width < 500)
+              const SizedBox(height: 5),
               Expanded(
-                child: PopupMenuButton<String>(
-                  onSelected: _updateControllerLanguage,
-                  icon: const Icon(Icons.computer),
-                  itemBuilder: (BuildContext context) {
-                    return _languages.map((String language) {
-                      return PopupMenuItem<String>(
-                        value: language,
-                        child: Text(language),
-                      );
-                    }).toList();
-                  },
+                flex: 3,
+                child: SizedBox(
+                  height: 300,
+                  child: Center(
+                    child: TextField(
+                      controller: _outputController,
+                      readOnly: true,
+                      maxLines: 20,
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(), labelText: 'Output'),
+                    ),
+                  ),
                 ),
+              ),
+              if (_selectedlanguage == "Java")
+                const Center(
+                    child: Text(
+                        'Use Class Name as <temp> when programming on java')),
+              const SizedBox(
+                height: 10,
               )
+            ],
+          ),
+        );
+      } else {
+        return null;
+      }
+    }
+
+    return Scaffold(
+        appBar: AppBar(
+          scrolledUnderElevation: 0,
+          backgroundColor: Colors.transparent,
+          title: const Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'Tascuit',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                'Logic',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+              ),
+            ],
+          ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: ElevatedButton.icon(
+                onPressed: _runCode,
+                icon: const Icon(Icons.play_arrow_rounded),
+                label: const Text("Run"),
+                style: ButtonStyle(
+                    shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5))),
+                    foregroundColor: MaterialStateProperty.all(Colors.white),
+                    backgroundColor: MaterialStateProperty.all(Colors.red)),
+              ),
+            )
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _runCode,
-        child: const Icon(Icons.play_arrow),
-      ),
-    );
+        body: screenresponsive());
+
+    // floatingActionButtonLocation: FloatingActionButtonLocation.miniStartFloat,
+    // floatingActionButton: FloatingActionButton(
+    //   onPressed: _runCode,
+    //   child: const Icon(Icons.play_arrow),
+    // ),
   }
 }
